@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>  
+<configuration>  
+  <springProperty scope="context" name="server-port"  source="server.port" defaultValue="boot"/>
+  <springProperty scope="context" name="service-name" source="spring.application.name" defaultValue="boot"/>
+  
+  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">  
+    <layout class="ch.qos.logback.classic.PatternLayout">  
+      <pattern>%-20(%d{HH:mm:ss.SSS} [%thread]) %-5level %logger{80} - %msg%n</pattern>  
+    </layout>  
+  </appender>
+
+  <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <rollingPolicy class = "ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/${service-name}/%d{yyyyMMdd}-${server-port}/info.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      </rollingPolicy>
+      <encoder>
+      <pattern>%-20(%d{yyyyMMdd HH:mm:ss.SSS} [%thread]) %-5level %logger{80} - %msg%n</pattern>  
+      </encoder>
+  </appender>
+  
+  <root level="INFO">  
+    <appender-ref ref="stdout" />   
+    <appender-ref ref="file" />
+  </root>  
+</configuration>  
