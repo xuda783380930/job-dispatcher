@@ -42,15 +42,10 @@ public class JobExecuteOperator{
 	}
     
     private void pauseTriggeredTask(JobBox jb) {
-		List<Task> tl = jb.getTasksList();
-		if(null!=tl) {
-			for(Task task:tl ) {
-				if(TaskProcessStatus.TRIGGERED.equals(task.getTaskProcessStatus())) {
-					jobBoxService.updateTaskStatus(task, TaskProcessStatus.PAUSED, "sysRestart");
-				}
-			}
+		List<Task> tl = jb.getAllTasks(TaskProcessStatus.TRIGGERED);
+		for(Task task:tl ) {
+			jobBoxService.updateTaskStatus(task, TaskProcessStatus.PAUSED, "sysRestart");
 		}
-		
 	}
 
 	public boolean triggerJob(String jobCode){
@@ -154,19 +149,19 @@ public class JobExecuteOperator{
 			updateTaskStatus(jobBox, task.getTaskCode(),TaskProcessStatus.PAUSED,optSeq);
 		}
 			
-		//正在执行的任务则将其下游任务暂停
-		List<Task> tasksStarted = jobBox.getTasksStarted();
+		//正在执行的任务无法由引擎端停止，则将其下游任务暂停
+		List<Task> tasksStarted = jobBox.getAllTasks(TaskProcessStatus.STARTED);
 		for(Task task:tasksStarted) {
-			List<Task> downstreamTasks = jobBox.getDownstreamTasks(task.getTaskCode());
-			for(Task downstreamTask:downstreamTasks) {
-				updateTaskStatus(jobBox,downstreamTask.getTaskCode(),TaskProcessStatus.PAUSED,optSeq);
+			List<String> downstreamTasks = jobBox.getJobStructVO().getDownstreamTasks(task.getTaskCode());
+			for(String downstreamTaskCode:downstreamTasks) {
+				updateTaskStatus(jobBox,downstreamTaskCode,TaskProcessStatus.PAUSED,optSeq);
 			}
 		}
 			return true;
 	}
 	
 	private Boolean startJobBox(JobBox jobBox,String optSeq) {
-		List<Task> tasksPaused = jobBox.getTasksPaused();
+		List<Task> tasksPaused = jobBox.getAllTasks(TaskProcessStatus.PAUSED);
 		for(Task task:tasksPaused) {
 			updateTaskStatus(jobBox,task.getTaskCode(),TaskProcessStatus.NEED_RESTART,optSeq);
 		}

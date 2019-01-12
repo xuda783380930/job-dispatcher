@@ -2,7 +2,9 @@ package com.zofund.jobdispatcher.model.middleware;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,7 +14,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
+import com.zofund.jobdispatcher.model.middleware.vo.JobStructVO;
 
 @Entity
 @Table(name = "T_JOBBOX")
@@ -34,6 +38,10 @@ public class JobBox implements Serializable{
     @OneToMany(fetch=FetchType.EAGER,cascade=CascadeType.ALL)
     @JoinColumn(name = "C_JOBBOX_ID")
 	private List<Task> tasksList;
+    
+	public JobBox(){
+		
+	}
 	
 	public Long getId() {
 		return id;
@@ -43,10 +51,6 @@ public class JobBox implements Serializable{
 		this.id = id;
 	}
 	
-	public JobBox(){
-		
-	}
-	
 	public String getJobCode() {
 		return jobCode;
 	}
@@ -54,29 +58,33 @@ public class JobBox implements Serializable{
 	public String getEventTime() {
 		return eventTime;
 	}
-	
 
-	public List<Task> getDownstreamTasks(String taskCode) {
-		ArrayList<Task> downstreamTasks = new ArrayList<Task>();
-		for(Task task:tasksList){
-			if( null == task.getUpstreamTaskCodes()){
-				if(null == taskCode) {
-					downstreamTasks.add(task);
-				}
-			}else{
-				String[] upstreamTaskCodes = task.getUpstreamTaskCodes().split(",");
-				for(String upstreamTaskCode:upstreamTaskCodes) {
-					if(upstreamTaskCode.equals(taskCode)) {
-						if(null != taskCode) {
-							downstreamTasks.add(task);
-						}
-					}
-				}
-			}
-		}
-		return downstreamTasks;
+    //辅助结构
+    @Transient
+    private JobStructVO  jobStructVO = null;
+    
+    @Transient
+    private Map<String,Task> taskMap = null;
+
+	public Task getTask(String taskCode) {
+    	if(null == taskMap) {
+    		taskMap = new HashMap<String,Task>();
+    		if(null!=tasksList) {
+    			for(Task t:tasksList) {
+    				taskMap.put(t.getTaskCode(), t);
+    			}
+    		}
+    	}
+		return taskMap.get(taskCode);
 	}
 	
+    public JobStructVO getJobStructVO(){
+		if(null==jobStructVO) {
+    		jobStructVO = new JobStructVO(tasksList);
+    	}
+    	return jobStructVO;
+    }
+    
 	public List<Task> getTasksList() {
 		return tasksList;
 	}
@@ -103,7 +111,7 @@ public class JobBox implements Serializable{
 		return tasksCanExecute;
 	}
 	
-	public synchronized Boolean allTaskIsFinished() {
+	public Boolean allTaskIsFinished() {
 		for(Task task:this.getTasksList()) {
 				if(!TaskProcessStatus.FINISHED.equals(task.getTaskProcessStatus())) {
 					return false;
@@ -111,34 +119,15 @@ public class JobBox implements Serializable{
 		}
 		return true;
 	}
-
-	public Task getTask(String taskCode) {
-		for(Task task:this.tasksList) {
-			if(taskCode.equals(task.getTaskCode())) {
-				return task;
-			}
-		}
-		return null;
-	}
 	
-	public List<Task> getTasksStarted() {
-		ArrayList<Task> tasksStarted = new ArrayList<Task>();
+	public List<Task> getAllTasks(@NotNull TaskProcessStatus status) {
+		List<Task> tasks = new ArrayList<Task>();
 		for(Task task:this.tasksList) {
-			if(TaskProcessStatus.STARTED.equals(task.getTaskProcessStatus())) {
-				tasksStarted.add(task);
+			if(status.equals(task.getTaskProcessStatus())) {
+				tasks.add(task);
 			}
 		}
-		return tasksStarted;
-	}
-	
-	public List<Task> getTasksPaused() {
-		ArrayList<Task> tasksStarted = new ArrayList<Task>();
-		for(Task task:this.tasksList) {
-			if(TaskProcessStatus.PAUSED.equals(task.getTaskProcessStatus())) {
-				tasksStarted.add(task);
-			}
-		}
-		return tasksStarted;
+		return tasks;
 	}
 	
 	private boolean canExecute(Task t) {

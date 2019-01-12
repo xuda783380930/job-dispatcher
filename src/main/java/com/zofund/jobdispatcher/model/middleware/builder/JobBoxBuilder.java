@@ -1,9 +1,9 @@
 package com.zofund.jobdispatcher.model.middleware.builder;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +12,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+import com.zofund.jobdispatcher.model.middleware.vo.JobStructVO;
 
 @Entity
 @Table(name = "T_JOB_BUILDER")
@@ -30,8 +32,22 @@ public class JobBoxBuilder implements Serializable {
     @JoinColumn(name = "C_JOBCODE")
 	private List<TaskBuilder> taskBuilderList;
     
+    //辅助结构
+    @Transient
+    private JobStructVO  jobStructVO = null;
+    
+    @Transient
+    private Map<String,TaskBuilder> taskBuilderMap = null;
+    
     public JobBoxBuilder() {
     	
+    }
+    
+    public JobStructVO getJobStructVO(){
+		if(null==jobStructVO) {
+    		jobStructVO = new JobStructVO(taskBuilderList);
+    	}
+    	return jobStructVO;
     }
 
 	public List<TaskBuilder> getTaskBuilderList() {
@@ -57,72 +73,17 @@ public class JobBoxBuilder implements Serializable {
 	public void setMonitorParas(String monitorParas) {
 		this.monitorParas = monitorParas;
 	}
-	
-	public List<TaskBuilder> getDownstreamTasks(TaskBuilder nowTaskBuilder) {
-		List<TaskBuilder> downstreamTasks = new ArrayList<TaskBuilder>();
-		if(null!=this&&null!=this.getTaskBuilderList()) {
-			for(TaskBuilder task:this.getTaskBuilderList()) {
-				String upstreamTaskCodeStr = task.getUpstreamTaskCodes();
-				if(null == upstreamTaskCodeStr){
-					if(null == nowTaskBuilder) {
-						downstreamTasks.add(task);
-					}
-				}else{
-					String[] upstreamTaskCodes = upstreamTaskCodeStr.split(",");
-					for(String upstreamTaskCode:upstreamTaskCodes) {
-						if(null != nowTaskBuilder&&upstreamTaskCode.equals(nowTaskBuilder.getTaskCode())) {
-							downstreamTasks.add(task);
-						}
-					}
-				}
-			}
-		}
-		return downstreamTasks;
-	}
-	
-    public HashSet<String> getDuplicatedLinkNodes(TaskBuilder nowTask){
-		List<TaskBuilder> downStreamTasks = this.getDownstreamTasks(nowTask);
-		if(downStreamTasks!=null) {
-			for(int i=0;i<downStreamTasks.size();i++) {
-				if(null!=getDuplicatedLinkNodes(downStreamTasks.get(i))) {
-					return getDuplicatedLinkNodes(downStreamTasks.get(i));
-				}
-				for(int j=i+1;j<downStreamTasks.size();j++) {
-					if(isIn(downStreamTasks.get(i),downStreamTasks.get(j))){
-						HashSet<String> hs = new HashSet<String>();
-						hs.add(nowTask.getTaskCode());
-						hs.add(downStreamTasks.get(i).getTaskCode());
-						hs.add(downStreamTasks.get(j).getTaskCode());
-						return hs ;
-					}
-				}
-			}
-		}
-		return null;
-	}
-    
-	private boolean isIn(TaskBuilder taskBuilder, TaskBuilder taskGroup) {
-		if(taskBuilder==taskGroup) {
-			return true;
-		}
-		List<TaskBuilder> downStreamTasks = this.getDownstreamTasks(taskGroup);
-		if(downStreamTasks!=null) {
-			for(TaskBuilder tb:downStreamTasks) {
-				if(isIn(taskBuilder,tb)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
 
 	public TaskBuilder getTaskBuilderByTaskCode(String taskCode) {
-		for(TaskBuilder taskBuilder:taskBuilderList) {
-			if(taskCode.equals(taskBuilder.getTaskCode())) {
-				return taskBuilder;
-			}
-		}
-		return null;
+    	if(null==taskBuilderMap) {
+    		taskBuilderMap = new HashMap<String,TaskBuilder>();
+    		if(null!=taskBuilderList) {
+    			for(TaskBuilder tb:taskBuilderList) {
+    				taskBuilderMap.put(tb.getTaskCode(), tb);
+    			}
+    		}
+    	}
+		return taskBuilderMap.get(taskCode);
 	}
 
 }

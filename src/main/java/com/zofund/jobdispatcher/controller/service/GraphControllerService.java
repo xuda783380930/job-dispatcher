@@ -20,6 +20,7 @@ import com.zofund.jobdispatcher.model.middleware.TaskProcessStatus;
 import com.zofund.jobdispatcher.model.middleware.TaskStatusOptLog;
 import com.zofund.jobdispatcher.model.middleware.builder.JobBoxBuilder;
 import com.zofund.jobdispatcher.model.middleware.builder.TaskBuilder;
+import com.zofund.jobdispatcher.model.middleware.vo.JobStructVO;
 import com.zofund.jobdispatcher.service.JobBoxBuilderRegisterCenter;
 import com.zofund.jobdispatcher.service.JobBoxService;
 import com.zofund.jobdispatcher.service.db.JobBoxStatusOptLogService;
@@ -91,15 +92,16 @@ public class GraphControllerService {
 
 	private void calDownstreamXY(JobBoxBuilder jbb,TaskBuilder nowTask,Integer x,Integer y,
 			HashMap<Integer,HashMap<Integer,JsonObject>> positionMap,HashSet<String> taskCodes,JsonArray linksArray) {
-		List<TaskBuilder> downStreamTasks = jbb.getDownstreamTasks(nowTask);
-		downStreamTasks.sort((TaskBuilder t1, TaskBuilder t2) -> deep(jbb,t2).compareTo(deep(jbb,t1)));
+		JobStructVO js = jbb.getJobStructVO();
+		List<String> downStreamTasks = js.getDownstreamTasksSortByDeep(nowTask==null?null:nowTask.getTaskCode());
 		if(null!=downStreamTasks) {
-			for(TaskBuilder task:downStreamTasks) {
+			for(String taskCode:downStreamTasks) {
 				Integer deepx = x + 1;
 				Integer deepy = y;
-				if(!taskCodes.contains(task.getTaskCode())) {
+				TaskBuilder task = jbb.getTaskBuilderByTaskCode(taskCode);
+				if(!taskCodes.contains(taskCode)) {
 					JsonObject jo = new JsonObject();
-					jo.addProperty("name", task.getTaskCode());
+					jo.addProperty("name", taskCode);
 					jo.addProperty("x", deepx);
 					if(null!=positionMap.get(deepx)) {
 						deepy = 1 + positionMap.get(deepx).size();
@@ -107,6 +109,7 @@ public class GraphControllerService {
 						deepy = 1;
 					}
 					jo.addProperty("y", deepy);
+					
 					jo.addProperty("taskUrl", task.getAdapterPara());
 					if(task.getOverTimeMinute()!=null) {
 						jo.addProperty("overTime", task.getOverTimeMinute());
@@ -136,15 +139,15 @@ public class GraphControllerService {
 		if(null != nowTask) {
 			nowTaskCode = nowTask.getTaskCode();
 		}
-		List<Task> downStreamTasks = jobBox.getDownstreamTasks(nowTaskCode);
-		downStreamTasks.sort((Task t1, Task t2) -> deep(jobBox,t2).compareTo(deep(jobBox,t1)));
+		List<String> downStreamTasks = jobBox.getJobStructVO().getDownstreamTasksSortByDeep(nowTaskCode);
 		if(null!=downStreamTasks) {
-			for(Task task:downStreamTasks) {
+			for(String downStreamTaskCode:downStreamTasks) {
 				Integer deepx = x+1;
 				Integer deepy = y;
-				if(!taskCodes.contains(task.getTaskCode())) {
+				Task task = jobBox.getTask(downStreamTaskCode);
+				if(!taskCodes.contains(downStreamTaskCode)) {
 					JsonObject jo = new JsonObject();
-					jo.addProperty("name", task.getTaskCode());
+					jo.addProperty("name", downStreamTaskCode);
 					jo.addProperty("x", deepx);
 					if(null!=positionMap.get(deepx)) {
 						deepy = 1 + positionMap.get(deepx).size();
@@ -198,36 +201,6 @@ public class GraphControllerService {
 			}
 		}
 			
-	}
-
-	private Integer deep(JobBox jobBox, Task nowTask) {
-		String nowTaskCode = null;
-		if(null != nowTask) {
-			nowTaskCode = nowTask.getTaskCode();
-		}
-		List<Task> downStreamTasks = jobBox.getDownstreamTasks(nowTaskCode);
-		Integer maxDeep = 0 ; 
-		if(null!=downStreamTasks) {
-			for(Task t:downStreamTasks) {
-				if((deep(jobBox,t)+1)>maxDeep) {
-					maxDeep = deep(jobBox,t)+1;
-				}
-			}
-		}
-		return maxDeep;
-	}
-	
-	private Integer deep(JobBoxBuilder jbb, TaskBuilder nowTask) {
-		List<TaskBuilder> downStreamTasks = jbb.getDownstreamTasks(nowTask);
-		Integer maxDeep = 0 ; 
-		if(null!=downStreamTasks) {
-			for(TaskBuilder t:downStreamTasks) {
-				if((deep(jbb,t)+1)>maxDeep) {
-					maxDeep = deep(jbb,t)+1;
-				}
-			}
-		}
-		return maxDeep;
 	}
 
 	public String getNodeColor(TaskProcessStatus status) {
@@ -386,8 +359,8 @@ public class GraphControllerService {
 	
 		    JsonArray postionArray = new JsonArray();
 		    JsonArray linksArray = new JsonArray();
-		    if(null!=jbb.getDuplicatedLinkNodes(null)) {
-			    joo.addProperty("duplicateNodes", jbb.getDuplicatedLinkNodes(null).toString());
+		    if(null!=jbb.getJobStructVO().getDuplicatedLinkNodes(null)) {
+			    joo.addProperty("duplicateNodes", jbb.getJobStructVO().getDuplicatedLinkNodes(null).toString());
 		    }
 		    calXY(jbb,postionArray,linksArray);
 			joo.add("nodes", postionArray);

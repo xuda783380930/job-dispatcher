@@ -101,18 +101,6 @@ public class Task implements Serializable{
 		this.taskProcessStatus = TaskProcessStatus.UNSTART;
 	}
 	
-	public Task(String jobCode,String taskCode,String upstreamTaskCodes,String adapterSpringId,String adapterMethodName,
-				String adapterPara ,String eventTime,TaskProcessStatus taskProcessStatus){
-		this.jobCode = jobCode;
-		this.taskCode = taskCode;
-		this.upstreamTaskCodes = upstreamTaskCodes;
-		this.adapterSpringId = adapterSpringId;
-		this.adapterMethodName = adapterMethodName;
-		this.adapterPara = adapterPara;
-		this.eventTime = eventTime;
-		this.taskProcessStatus = taskProcessStatus;
-	}
-	
     public JsonObject toJsonObject(){
 		JsonObject taskJson = new JsonObject();
 		taskJson.addProperty("taskCode", this.getTaskCode());

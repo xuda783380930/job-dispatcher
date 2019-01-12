@@ -18,7 +18,6 @@ import com.zofund.jobdispatcher.model.middleware.TaskProcessStatus;
 import com.zofund.jobdispatcher.service.db.JobBoxStatusOptLogService;
 import com.zofund.jobdispatcher.service.engine.JobBoxQueue;
 import com.zofund.jobdispatcher.service.engine.JobExecuteEngine;
-import com.zofund.jobdispatcher.service.MessageService;
 
 @Service
 @EnableScheduling

@@ -26,8 +26,8 @@ public class JobBoxBuilderRegisterCenter{
     			}
     		}
     	}
-    	if(null!=jb.getDuplicatedLinkNodes(null)){
-    		errMsg = "###" + jb.getDuplicatedLinkNodes(null).toString() + " is Duplicated!";
+    	if(null!=jb.getJobStructVO().getDuplicatedLinkNodes(null)){
+    		errMsg = "###" + jb.getJobStructVO().getDuplicatedLinkNodes(null).toString() + " is Duplicated!";
      	    return errMsg;
     	}
     	jobBoxBuilderDao.deleteById(jb.getJobCode());
