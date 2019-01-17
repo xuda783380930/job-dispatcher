@@ -198,6 +198,209 @@
     <script src="assets/js/amazeui.datatables.min.js"></script>
     <script src="assets/js/dataTables.responsive.min.js"></script>
     <script src="assets/js/app.js"></script>
+    <script>
+    $(function(){  
+        var jobCode = GetQueryString("jobcode");
+        var eventtime = GetQueryString("eventtime");
+        var taskCode = GetQueryString("taskcode");
+        
+        if(GetQueryString("ifhis")==1){
+    	    $("#task-opt-btn").hide();
+        }
+        
+        $.ajax({
+            type: "POST",
+            url: "task/cons?url=tasks/"+taskCode,
+            success: function(info){
+            	if(info.adapterpara!=undefined){
+            		var htmlStr = "";
+                	htmlStr = htmlStr+"<tr>";
+                	htmlStr = htmlStr+"<td>任务Url</td><td>" + processNull(info.adapterpara)+"</td>";
+                	htmlStr = htmlStr+"</tr>";
+                	htmlStr = htmlStr+"<tr>";
+                	htmlStr = htmlStr+"<td>Job代码</td><td>" + processNull(info.jobcode)+"</td>";
+                	htmlStr = htmlStr+"</tr>";
+                	htmlStr = htmlStr+"<tr>";
+                	htmlStr = htmlStr+"<td>任务代码</td><td>" + processNull(info.taskcode)+"</td>";
+                	htmlStr = htmlStr+"</tr>";
+                	htmlStr = htmlStr+"<tr>";
+                	htmlStr = htmlStr+"<td>任务名</td><td>" + processNull(info.taskname)+"</td>";
+                	htmlStr = htmlStr+"</tr>";
+                	htmlStr = htmlStr+"<tr>";
+                	htmlStr = htmlStr+"<td>任务描述</td><td>" + processNull(info.taskdesc)+"</td>";
+                	htmlStr = htmlStr+"</tr>";
+                	htmlStr = htmlStr+"<tr>";
+                	htmlStr = htmlStr+"<td>任务类型</td><td>" + processNull(info.tasktype)+"</td>";
+                	htmlStr = htmlStr+"</tr>";
+                	htmlStr = htmlStr+"<tr>";
+                	htmlStr = htmlStr+"<td>任务参数列表</td><td>" + processNull(info.paramlist)+"</td>";
+                	htmlStr = htmlStr+"</tr>";
+                	htmlStr = htmlStr+"<tr>";
+                	htmlStr = htmlStr+"<td>上游代码</td><td>" + processNull(info.upstreamtaskcodes)+"</td>";
+                	htmlStr = htmlStr+"</tr>";
+                	htmlStr = htmlStr+'<tr>';
+                	htmlStr = htmlStr+'<td>任务脚本</td><td>'+
+                			          '<textarea style="width:100%;background:transparent;border-style:none;" rows="8" readonly="readonly">' + 
+                			          processNull(info.script)+'</textarea></td>';
+                	htmlStr = htmlStr+"</tr>";
+                	$("#task-base-info").html(htmlStr);
+            	}
+            }
+    	 });
+        
+        var queryJson = {
+        		"url":"tasklogs?taskcode="+taskCode+"&eventtime="+eventtime
+        }
+        $.ajax({
+            type: "POST",
+            url: "task/cons",
+            data:queryJson,
+            success: function(logs){
+            	var htmlStr = "";
+            	for(var idx in logs){
+            		var log = logs[idx];
+            		htmlStr = htmlStr+"<tr>";
+            		htmlStr = htmlStr+"<td>" + log.id+"</td>";
+            		htmlStr = htmlStr+"<td>" + log.eventtime+"</td>";
+            		htmlStr = htmlStr+"<td>" + log.starttime+"</td>";
+            		htmlStr = htmlStr+"<td>" + log.endtime+"</td>";
+            		htmlStr = htmlStr+"<td>" + log.executiontime+"</td>";
+            		htmlStr = htmlStr+"<td>" + log.inserttime+"</td>";
+            		htmlStr = htmlStr+"<td>" + log.retrytimes+"</td>";
+            		htmlStr = htmlStr+'<td>' + '<textarea style="width:100%;background:transparent;border-style:none;" rows="8" readonly="readonly">' + 
+            		                  log.content + '</textarea></td>';
+            		htmlStr = htmlStr+"</tr>";
+            	}
+
+            	
+            	$("#task-log").html(htmlStr);
+            }
+    	 });
+        
+    	 $.ajax({
+               type: "GET",
+               url: "graph/task?jobcode="+jobCode+"&eventtime="+eventtime+"&taskcode="+taskCode,
+               success: function(data){
+            	    // 基于准备好的dom，初始化echarts实例
+            	    var myChart = echarts.init(document.getElementById('taskdetail-chart'));
+    				if(null!=data&&null!=data.nodes){
+    					  var nodes = data.nodes;
+    					  var axisData = data.axisData;
+              			  var links = data.links;
+                       // 指定图表的配置项和数据
+                         option = {
+        					    title: {
+       	                         	textStyle:{ //设置主标题风格
+       	                         		color:'white'//设置主标题字体颜色
+    	                    		},
+        					    	text: 'Job:'+jobCode+',批次日期:'+eventtime+',task:'+taskCode+' -运行时序'
+        					    },
+        					    toolbox: {
+        					        feature: {
+        					            dataZoom: {
+        		                             borderColor: 'white'
+        					            },
+        					            restore: {},
+        					            saveAsImage: {}
+        					        }
+        					    },
+        					    tooltip: {
+    	                            formatter: function(params){
+    	                            	if(typeof(params.value[3]) == "undefined"){
+    	                            		return formatDate(params.value[1]) + params.value[0];
+    	                            	}
+                                        return formatDate(params.value[1]) + "由" + params.value[3]+ "置为" +params.value[0];
+                                     } 
+        					    },
+        					    xAxis: {
+        					        type : 'category',
+        					        boundaryGap: ['5%', '5%'],
+        					        data : axisData,
+        	                        axisLine:{
+        	                            lineStyle:{
+        	                                color:'white'
+        	                            }
+        	                        }
+        					    },
+        					    yAxis: {
+        					        type : 'value',
+        					        axisLabel: {
+        					        		formatter: function (value, index) {
+        					        			return formatDate(value.toString());
+        					        		},
+        					        		rotate:40
+        					        	},
+        					        boundaryGap: ['5%', '5%'],
+        					        scale:true,
+        	                        axisLine:{
+        	                            lineStyle:{
+        	                                color:'white'
+        	                            }
+        	                        }
+        					    },
+        					    grid: {
+        					    	left: 100,
+        					    	bottom:80
+        					    },
+        					    series: [
+        					        {
+        					            type: 'graph',
+        					            layout: 'none',
+        					            coordinateSystem: 'cartesian2d',
+        					            symbolSize: 20,
+        					            itemStyle: {
+        					                normal: {
+        					                    color: function(params) {
+        					                           return params.value[2];
+        					                          } 
+        					               		  }
+        					            },
+        					            label: {
+        	                                  normal: {
+        	                                	    show:true,                  //是否显示标签。
+        	                                	    position:"inside",          //标签的位置。// 绝对的像素值[10, 10],// 相对的百分比['50%', '50%'].'top','left','right','bottom','inside','insideLeft','insideRight','insideTop','insideBottom','insideTopLeft','insideBottomLeft','insideTopRight','insideBottomRight'
+        	                                	    color: 'black',
+        	                                	    offset:[0, 0],             //是否对文字进行偏移。默认不偏移。例如：[30, 40] 表示文字在横向上偏移 30，纵向上偏移 40。
+        	                                	    formatter: function(params){
+        	                                            return formatDate(params.value[1]);
+        	                                        }       //标签内容格式器。模板变量有 {a}、{b}、{c}，分别表示系列名，数据名，数据值。
+        	                                	}
+        	                              },
+        					            edgeSymbol: ['circle', 'arrow'],
+        					            edgeSymbolSize: [4, 10],
+        					            links:links,
+        					            data: nodes,
+        					            lineStyle: {
+        					                normal: {
+        					                    color: '#5eb95e',
+        					                    width: 2
+        					                }
+        					            }
+        					        }
+        					    ]
+        					};
+                          //实现节点点击事件
+                          function focus(param) {
+                        	  var option = myChart.getOption();
+                         	  var data = param.data;
+                         	  //判断节点的相关数据是否正确
+                         	  if (data != null && data != undefined) {
+                          	  if (data.url != null && data.url != undefined) {
+                              //根据节点的扩展属性url打开新页面
+                              window.open(data.url);
+                          	  }
+                             }
+                          }
+
+                        //绑定图表节点的点击事件
+                         myChart.on("click", focus)
+                        // 使用刚指定的配置项和数据显示图表。
+                        myChart.setOption(option);
+    					}
+                      }
+                });
+	  });
+    </script>
 
 </body>
 

@@ -3,6 +3,10 @@
 #### 介绍
 一个工作流编排，任务调度引擎
 
+欢迎加入QQ讨论群:558192118
+
+GtiHub地址:[https://github.com/xuda783380930/job-dispatcher.git](https://github.com/xuda783380930/job-dispatcher.git)
+
 基本模型:
 
 基于事件或者定时生成一个job,每个job由若干个task组成，task之间存在串行或并行的依赖关系
@@ -21,7 +25,7 @@ task的具体实现引由客户端（用户自己编程实现），调度引擎�
 
 job-dispatcher是微服务中的一个独立组件，而非作业平台，因此它并不去实现各类任务的运行环境的适配工作，任何实现了配置中子任务HTTP启动接口的程序都可以作为job-dispatche的客户端，无论是何种语言何种数据库的程序。
 
-相似项目: _Linkedin公司推出的Azkaban_ ， _国产软件TASKCTL_， 欢迎大家对比提出意见
+相似项目: _Linkedin公司推出的Azkaban_ ， _国产软件TASKCTL_， _流程引擎 Flowable /Activiti_ ，欢迎大家对比提出意见
 
 #### 软件架构
 软件架构说明
@@ -83,11 +87,12 @@ job-dispatcher是微服务中的一个独立组件，而非作业平台，因此
 			{
 				"taskCode": "task2",
 
-				"adapterPara": "http://172.11.33.44/trigger? jobCode=jos2&taskCode=task2"
+				"adapterPara": "http://172.11.33.44/trigger? jobCode=jos2&taskCode=task2",
 
-				//"upstreamTaskCodes":[]	//不依赖任何任务可以不填该字段
+				//"upstreamTaskCodes":[],//不依赖任何任务可以不填该字段
 
                                 //"overTime":"60" //可不填
+
 			}
 
 		]

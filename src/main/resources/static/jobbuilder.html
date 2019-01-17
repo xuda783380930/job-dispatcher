@@ -156,7 +156,88 @@
     <script src="assets/js/amazeui.datatables.min.js"></script>
     <script src="assets/js/dataTables.responsive.min.js"></script>
     <script src="assets/js/app.js"></script>
-
+    <script>
+    $(function(){ 
+        	   var jobCode = GetQueryString("jobcode");
+        		//Ajax调用处理
+        	       $.ajax({
+        	          type: "GET",
+        	          url: "graph/quartzjob?jobcode="+jobCode,
+        	          success: function(data){
+        	       	    // 基于准备好的dom，初始化echarts实例
+        	       	    var myChart = echarts.init(document.getElementById('jobbuilder'));
+        					if(null!=data&&null!=data.nodes&&null!=data.links){
+        						  var myData = data.nodes;
+        						  var myLinks = data.links;
+        	                  // 指定图表的配置项和数据
+        	                     option = {
+        	                     title: {
+        	                         textStyle:{ //设置主标题风格
+        	                        	 color:'white'//设置主标题字体颜色
+    	                    		  },
+        	                         text: 'Job:'+jobCode+'拓扑结构图'
+        	                     },
+        	                     tooltip: {},
+        	                     animationDurationUpdate: 1500,
+        	                     animationEasingUpdate: 'quinticInOut',
+        	                     formatter: function(params){//触发之后返回的参数，这个函数是关键
+        	                    	 if("node"==params.dataType){
+        	                    		 if (typeof(params.data.overTime) != undefined){
+        	                    			 return "任务接口地址为"+ params.data.taskUrl +",设定的超时提醒时间为"+params.data.overTime+"分钟";
+        	                    		 }
+        	                    	   	return "任务接口地址为"+ params.data.taskUrl +",设定的超时提醒时间未设定";
+        	                     	 }
+        	                        if("edge"==params.dataType){
+        	                        	return "从"+ params.data.source + "到"+ params.data.target;
+    	                     	    }
+        	                      },
+        	                     series : [
+        	                         {
+        	                             type: 'graph',
+        	                             layout: 'none',
+        	                             symbolSize: 20,
+        	                             barwidth:100,
+        	                             roam: true,
+        	                             label: {
+        	                                 normal: {
+        	                               	    show:true,                  //是否显示标签。
+        	                               	    color:'black',
+        	                               	    position:"inside",          //标签的位置。// 绝对的像素值[10, 10],// 相对的百分比['50%', '50%'].'top','left','right','bottom','inside','insideLeft','insideRight','insideTop','insideBottom','insideTopLeft','insideBottomLeft','insideTopRight','insideBottomRight'
+        	                               	    offset:[0, 0],             //是否对文字进行偏移。默认不偏移。例如：[30, 40] 表示文字在横向上偏移 30，纵向上偏移 40。
+        	                               	    formatter: function(params){
+        	                                           return params.data.name;
+        	                                       }       //标签内容格式器。模板变量有 {a}、{b}、{c}，分别表示系列名，数据名，数据值。
+        	                               	}
+        	                             },
+        	                             edgeSymbol: ['circle', 'arrow'],
+        	                             edgeSymbolSize: [4, 10],
+        	                             edgeLabel: {
+        	                                 normal: {
+        	                                     textStyle: {
+        	                                         fontSize: 20
+        	                                     }
+        	                                 }
+        	                             },
+        	                             data: myData,
+        	                             links: myLinks,
+        	                             lineStyle: {
+        	                                 normal: {
+        	                                     opacity: 0.9,
+        	                                     width: 2,
+        	                                     curveness: 0
+        	                                 }
+        	                             }
+        	                         }
+        	                     ]
+        	                 	};
+        	                  
+        	                   // 使用刚指定的配置项和数据显示图表。
+        	                   myChart.setOption(option);
+        						}
+        	             }
+        	   });
+  	  });
+     </script>
 </body>
 
 </html>

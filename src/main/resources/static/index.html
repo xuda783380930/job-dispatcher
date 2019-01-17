@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -85,7 +84,7 @@
                         <i class="am-icon-bar-chart sidebar-nav-link-logo"></i> 图表
 
                     </a>
-                </li>
+                </li>-->
 
                 <li class="sidebar-nav-heading">page<span class="sidebar-nav-heading-info"> 常用页面</span></li>
                 <li class="sidebar-nav-link">
@@ -107,7 +106,7 @@
                         </li>
                     </ul>
                 </li>
-                <li class="sidebar-nav-link">
+              <!-- <li class="sidebar-nav-link">
                     <a href="sign-up.html">
                         <i class="am-icon-clone sidebar-nav-link-logo"></i> 注册
                         <span class="am-badge am-badge-secondary sidebar-nav-link-logo-ico am-round am-fr am-margin-right-sm">6</span>
@@ -122,8 +121,7 @@
                     <a href="404.html">
                         <i class="am-icon-tv sidebar-nav-link-logo"></i> 404错误
                     </a>
-                </li>
- -->
+                </li> -->
             </ul>
         </div>
 
@@ -150,31 +148,27 @@
                         </div>
                     </div>
 
-                    <div class="am-u-sm-12 am-u-md-6 am-u-lg-6 widget-margin-bottom-lg">
+                  	<div class="am-u-sm-12 am-u-md-6 am-u-lg-6 widget-margin-bottom-lg">
                          <div class="widget-body  am-fr">
-                                                    <div class="am-scrollable-horizontal ">
-                                                        <table width="100%" class="am-table am-table-compact am-text-nowrap tpl-table-black">
-                                                            <thead>
-                                                            	<tr>
-                                                                    <th>已注册的QuartzJob</th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>JobCode</th>
-                                                                    <th>JobCrontab表达式</th>
-                                                                    <th>过滤日历名</th>
-                                                                    <th>监控参数</th>
-                                                                    <th>操作</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="quartz-jobs">
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
+                               <div class="am-scrollable-horizontal ">
+                                     <table width="100%" class="am-table am-table-compact am-text-nowrap tpl-table-black">
+                                            <thead><tr><th>已注册的定时任务</th></tr>
+                                                <tr><th>JobCrontab表达式</th><th>过滤日历名</th><th>定时触发的JobCode</th></tr></thead>
+                                                    <tbody id="quartz-jobs"></tbody>
+                                     </table>
+                                </div>
+                         </div>
+                          <div class="widget-body  am-fr">
+                               <div class="am-scrollable-horizontal ">
+                                     <table width="100%" class="am-table am-table-compact am-text-nowrap tpl-table-black">
+                                            <thead><tr><th>已注册的作业</th></tr>
+                                                <tr><th>JobCode</th><th>监控参数</th><th>操作</th></tr></thead>
+                                                    <tbody id="jobbuilders"></tbody>
+                                     </table>
+                                </div>
+                         </div>
+                    </div>
                 </div>
-
-
                </div>
         </div>
     </div>
@@ -183,7 +177,168 @@
     <script src="assets/js/amazeui.datatables.min.js"></script>
     <script src="assets/js/dataTables.responsive.min.js"></script>
     <script src="assets/js/app.js"></script>
+    <script>
+    $(function(){ 
+        $('#example-r').DataTable({
+            bInfo: false, //页脚信息
+            dom: 'ti'
+        });
+        //首页已配置的QuartzJob列表
+        $.ajax({
+           type: "GET",
+           url: "quartz/jobs",
+           success: function(data){
+           	var htmlStr = "";
+           	for(var idx in data){
+           		var quartzJob = data[idx];
+           		htmlStr = htmlStr+'<tr>';
+           		htmlStr = htmlStr+"<td>" + processNull(quartzJob.jobCronExpression) +"</td>";
+           		htmlStr = htmlStr+"<td>" + processNull(quartzJob.filterCalendarName) +"</td>";
+           		htmlStr = htmlStr+"<td>" + processNull(quartzJob.jobCode) +"</td>";
+           		htmlStr = htmlStr+"</tr>";
+           	}
+           	$("#quartz-jobs").html(htmlStr);
+           }
+   	 	});
+        
+        $.ajax({
+            type: "GET",
+            url: "builder/jobbuilders",
+            success: function(data){
+            	var htmlStr = "";
+            	for(var idx in data){
+            		var quartzJob = data[idx];
+            		htmlStr = htmlStr+'<tr>';
+            		htmlStr = htmlStr+"<td>" + processNull(quartzJob.jobCode) +"</td>";
+            		htmlStr = htmlStr+"<td>" + processNull(quartzJob.monitorParas) +"</td>";
+            		var jobCode = quartzJob.jobCode;
+            		htmlStr = htmlStr+ '<td>'+
+            						   '<button type="button" class="am-btn am-btn-primary  am-btn-block tpl-btn-bg-color-success"'+
+            						   'onclick="javascript:openUrl(\'jobbuilder.html?jobcode='+ jobCode+'\')">查看配置拓扑结构</button>'+
+            		                   '</td>';
+            		htmlStr = htmlStr+"</tr>";
+            	}
+            	$("#jobbuilders").html(htmlStr);
+            }
+    	 });
 
+      //Ajax调用处理
+        $.ajax({
+           type: "GET",
+           url: "graph/unfinishedqueues",
+           success: function(data){
+        	    // 基于准备好的dom，初始化echarts实例
+               var echartsA = echarts.init(document.getElementById('tpl-echarts'));
+        	        if(null!=data.axisData&&null!=data.nodes){
+        	        	var axisData = data.axisData;
+    					var nodes  = data.nodes;
+            			var links = data.links;
+    					option = {
+    					    title: {
+   	                         	textStyle:{ //设置主标题风格
+   	                         		color:'white'//设置主标题字体颜色
+	                    		},
+    					        text: '调度引擎任务队列'
+    					    },
+    					    toolbox: {
+    					        feature: {
+    					            dataZoom: {
+    					            	borderColor: 'white'
+    					            },
+    					            restore: {},
+    					            saveAsImage: {}
+    					        }
+    					    },
+    					    tooltip: {
+	                            formatter: function(params){
+                                    return params.value[0]+" "+formatDate(params.value[1])+" "+params.value[3];
+                                 } 
+    					    },
+    					    xAxis: {
+    					        type : 'category',
+    					        boundaryGap: ['5%', '5%'],
+    					        data : axisData,
+    	                        axisLine:{
+    	                            lineStyle:{
+    	                                color:'white'
+    	                            }
+    	                        }
+    					    },
+    					    yAxis: {
+    					        type : 'value',
+    					        axisLabel: {
+    					        		formatter: function (value, index) {
+    					        			return formatDate(value.toString());
+    					        		},
+    					        		rotate:40
+    					        	},
+    					        boundaryGap: ['5%', '5%'],
+    					        scale:true,
+    	                        axisLine:{
+    	                            lineStyle:{
+    	                                color:'white'
+    	                            }
+    	                        }
+    					    },
+    					    grid: {
+    					    	left: 100,
+    					    	bottom:80
+    					    },
+    					    series: [
+    					        {
+    					            type: 'graph',
+    					            layout: 'none',
+    					            coordinateSystem: 'cartesian2d',
+    					            symbolSize: 20,
+    					            label: {
+    	                                  normal: {
+    	                                	    show:true,                  //是否显示标签。
+    	                                	    position:"inside",          //标签的位置。// 绝对的像素值[10, 10],// 相对的百分比['50%', '50%'].'top','left','right','bottom','inside','insideLeft','insideRight','insideTop','insideBottom','insideTopLeft','insideBottomLeft','insideTopRight','insideBottomRight'
+    	                                	    color: 'black',
+    	                                	    offset:[0, 0],             //是否对文字进行偏移。默认不偏移。例如：[30, 40] 表示文字在横向上偏移 30，纵向上偏移 40。
+    	                                	    formatter: function(params){
+    	                                            return formatDate(params.value[1]);
+    	                                        }       //标签内容格式器。模板变量有 {a}、{b}、{c}，分别表示系列名，数据名，数据值。
+    	                                	}
+    	                             },
+    					            itemStyle: {
+    					               		 normal: {
+    					                  			  color: function(params) {
+    					                  				  		return params.value[2];
+    					                  			  		 }
+    					               				 }
+    					           	},
+    					            edgeSymbol: ['circle', 'arrow'],
+    					            edgeSymbolSize: [4, 10],
+    					            data: nodes,
+    					            links:links,
+    					            lineStyle: {
+    					                normal: {
+    					                    color: '#5eb95e',
+    					                    width: 2
+    					                }
+    					            }
+    					        }
+    					    ]
+    					};
+    					  //实现节点点击事件
+                        function focus(param) {
+                      	  var option = echartsA.getOption();
+                       	  var data = param.value;
+                       	  //判断节点的相关数据是否正确
+                       	 window.location.href="jobdetail.html?jobcode="+data[0]+"&eventtime="+data[1];
+                        };
+
+                        //绑定图表节点的点击事件
+                        echartsA.on("click", focus);
+                        // 使用刚指定的配置项和数据显示图表。
+                        echartsA.setOption(option);
+    					}
+        	        }
+					
+            });
+    });
+    </script>
 </body>
 
 </html>
