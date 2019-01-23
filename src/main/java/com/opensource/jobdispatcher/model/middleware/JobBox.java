@@ -176,7 +176,7 @@ public class JobBox implements Serializable{
 		jobStructVO = getJobStructVO();
 		List<String> downstreamTasks = jobStructVO.getDownstreamTasks(taskCode);
 		for(String downstreamTaskCode : downstreamTasks) {
-			Task task = this.getTask(taskCode);
+			Task task = this.getTask(downstreamTaskCode);
 			if(task!=null) {
 				if(TaskProcessStatus.STARTED.equals(task.getTaskProcessStatus())||
 							downstreamTasksStatusAreStarted(downstreamTaskCode)) {

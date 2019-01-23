@@ -24,9 +24,6 @@ import com.opensource.jobdispatcher.service.engine.JobExecuteEngine;
 public class MonitorService{
 
 	private Logger log = LoggerFactory.getLogger(this.getClass());
-
-	@Autowired
-	private MessageService  messageService;
 	
 	@Autowired
 	private JobExecuteEngine jobExecuteEngine;
@@ -64,10 +61,12 @@ public class MonitorService{
 						DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 						LocalDateTime endTime = LocalDateTime.now();
 						Duration duration = Duration.between(LocalDateTime.parse(startedTime,df),endTime);
-						if(duration.compareTo(Duration.ofMinutes(Long.parseLong(task.getOverTimeMinute())))>0) {
-							String content = "Job:" + jb.getJobCode() + ",Task:" + task.getTaskCode() + " 已运行"
-								+ duration.toMinutes() + "分钟，设定的预警值为 " + task.getOverTimeMinute() + "分钟";
-							messageService.smsAlert(jb.getJobCode(), content);
+						if(null!=task.getOverTimeMinute()) {
+							if(duration.compareTo(Duration.ofMinutes(Long.parseLong(task.getOverTimeMinute())))>0) {
+								String content = "Job:" + jb.getJobCode() + ",Task:" + task.getTaskCode() + " 已运行"
+										+ duration.toMinutes() + "分钟，设定的预警值为 " + task.getOverTimeMinute() + "分钟";
+								//messageService.smsAlert(jb.getJobCode(), content);
+							}
 						}
 					}
 				}
