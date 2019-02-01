@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(entityManagerFactoryRef="dmEntityManagerFactory",transactionManagerRef="dmTransactionManager",
-basePackages= { "com.zofund.jobdispatcher.dao.dm" })
+basePackages= { "com.opensource.jobdispatcher.dao.dm" })
 public class DmRepositoryConfig {
 	
     @Autowired
@@ -39,7 +39,7 @@ public class DmRepositoryConfig {
 	     return builder.dataSource(dmDataSource)
 	                //设置数据源属性
 	                .properties(getVendorProperties())//设置实体类所在位置.扫描所有带有 @Entity 注解的类
-	                .packages("com.zofund.jobdispatcher.model.dm")//设置实体类所在位置
+	                .packages("com.opensource.jobdispatcher.model.dm")//设置实体类所在位置
 	                // Spring会将EntityManagerFactory注入到Repository之中.有了 EntityManagerFactory之后,
 	                // Repository就能用它来创建 EntityManager 了,然后Entity就可以针对数据库执行操作
 	                .persistenceUnit("dmPersistenceUnit")

@@ -17,7 +17,7 @@ public class SwaggerConfig {
 		return new Docket(DocumentationType.SWAGGER_2)
 				.apiInfo(apiInfo())
 				.select()
-				.apis(RequestHandlerSelectors.basePackage("com.zofund.jobdispatcher"))
+				.apis(RequestHandlerSelectors.basePackage("com.opensource.jobdispatcher"))
 				.paths(PathSelectors.any())
 				.build();
 	}
@@ -26,7 +26,6 @@ public class SwaggerConfig {
 		return new ApiInfoBuilder()
 				.title("任务调度引擎Swagger2")
 				.description("")
-				.termsOfServiceUrl("http://blog.csdn.net/saytime")
 				.version("1.0")
 				.build();
 	}
